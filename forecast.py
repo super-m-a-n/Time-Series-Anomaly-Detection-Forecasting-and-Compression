@@ -31,9 +31,6 @@ num_of_series = args.n
 # Load and peek the input dataset csv file
 dataset = pd.read_csv(dataset_path, sep='\t', lineterminator='\n', header=None)
 
-# Load and peek the input dataset csv file
-dataset = pd.read_csv(dataset_path, sep='\t', lineterminator='\n', header=None)
-
 # keep names of time series in seperate dataframe and convert it to an array
 series_names = pd.DataFrame(dataset, columns=[dataset.columns[0]]).values
 
