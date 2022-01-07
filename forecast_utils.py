@@ -77,6 +77,32 @@ def plot_series(time_points, original_series, predicted_series, window, series_n
     plt.legend()
     plt.show()
 
+def create_dataset(input_set, num_of_series, num_of_steps, w):
+    """ creates the x_set, y_set (x_train / y_train or x_test / y_test ) out of the input_set
+        input_set : 2D array -> columns are different time series, rows are time series values across time
+        num_of_series : number of series in input_set
+        num_of_steps  : number of steps = size of x_set and y_set
+        w : window of sampling """
+
+    # x_set will contain windows of w consecutive values for all time series of input_set
+    x_set = []
+    # y_set will contain the next value of corresponding time series for each of the windows of x_set
+    y_set = []
+
+    for series_index in range(num_of_series):
+        for i in range(w, num_of_steps + w):
+            # append next window of w consecutive values of time series in x_set
+            x_set.append(input_set[i-w:i, series_index])
+            # append next value of time series outside current window in y_set
+            y_set.append(input_set[i, series_index])
+
+    # convert to np arrays
+    x_set, y_set = np.array(x_set), np.array(y_set)
+    # reshape x_set to a tensor of size (#time_series * num_of_steps, window, 1)
+    x_set = np.reshape(x_set, (x_set.shape[0], x_set.shape[1], 1))
+
+    return x_set, y_set
+
 
 def execute(series_values, series_names, w):
     """ function where main work gets done
@@ -96,23 +122,10 @@ def execute(series_values, series_names, w):
     # scale train set manually using min max scaling
     scaled_train_set = (train_set - train_set.min()) / (train_set.max() - train_set.min())
 
-    # x train will contain windows of w consecutive values of all selected time series
-    x_train = []
-    # y train will contain the next value of time series for each of the windows of x train
-    y_train = []
-
     num_of_series = series_values.shape[1]
 
-    for series_index in range(num_of_series):
-        for i in range(w, train_set.shape[0]):
-            # append next window of w consecutive values of time series in x train
-            x_train.append(scaled_train_set[i-w:i, series_index])
-            # append next value of time series outside current window in y train
-            y_train.append(scaled_train_set[i, series_index])
-
-    x_train, y_train = np.array(x_train), np.array(y_train)
-    # reshape the x train to a tensor of size (#time_series * (train_set_size - window), window, 1)
-    x_train = np.reshape(x_train, (x_train.shape[0], x_train.shape[1], 1))
+    # get x_train, y_train
+    x_train, y_train = create_dataset(scaled_train_set, num_of_series, train_set.shape[0] - w, w)
 
     # configure RNN-LSTM model
     model = config_model(x_train.shape[1])
@@ -122,20 +135,8 @@ def execute(series_values, series_names, w):
     # normalize with minmax normalization based on train set
     inputs = (inputs - train_set.min()) / (train_set.max() - train_set.min())
 
-    # x test will contain windows of w consecutive values of time series for the test set now
-    x_test = []
-    y_test = []
-
-    for series_index in range(num_of_series):
-        for i in range(w, test_set.shape[0] + w):     # num of iters = size of dataset - (size of dataset - size of test set - window) = size of test set + window
-            # append next window of w consecutive values of time series in x test
-            x_test.append(inputs[i-w:i, series_index])
-            # append next value of time series outside current window in y test
-            y_test.append(inputs[i, series_index])
-
-    x_test, y_test = np.array(x_test), np.array(y_test)
-    # reshape the x test to a tensor of size (#time_series * test_set_size, window, 1)
-    x_test = np.reshape(x_test, (x_test.shape[0], x_test.shape[1], 1))
+    # get x_test, y_test
+    x_test, y_test = create_dataset(inputs, num_of_series, test_set.shape[0], w)
 
     # train model by fitting it to the training set
     history = model.fit(x_train, y_train, epochs = 80, batch_size = 64, validation_data=(x_test, y_test), verbose=0)
