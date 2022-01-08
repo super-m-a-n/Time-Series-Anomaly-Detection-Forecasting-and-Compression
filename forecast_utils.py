@@ -14,6 +14,7 @@ import math
 """ keras neural network imports """
 import keras
 from keras.models import Sequential
+from keras.models import load_model
 from keras.layers import Dense
 from keras.layers import LSTM
 from keras.layers import Dropout
@@ -31,21 +32,13 @@ def config_model(input_size):
     """ configure and return RNN-LSTM model to be trained """
     model = Sequential()
     # Adding the first input LSTM layer
-    model.add(LSTM(units = 50, return_sequences = True, input_shape = (input_size, 1)))
+    model.add(LSTM(units = 64, return_sequences = True, input_shape = (input_size, 1)))
     # Dropout layer to avoid overfitting
-    model.add(Dropout(0.5))
+    model.add(Dropout(0.3))
     # Adding a second LSTM layer
-    model.add(LSTM(units = 50))
+    model.add(LSTM(units = 64))
     # Dropout layer to avoid overfitting
-    model.add(Dropout(0.5))
-    # Adding a third LSTM layer
-    #model.add(LSTM(units = 50))
-    # Dropout layer to avoid overfitting
-    #model.add(Dropout(0.5))
-    # Adding a fourth LSTM layer
-    #model.add(LSTM(units = 50))
-    # Dropout layer to avoid overfitting
-    #model.add(Dropout(0.5))
+    model.add(Dropout(0.3))
     # Adding the output layer
     model.add(Dense(units = 1))
     # Compiling the RNN by determinng optimizer and loss function
@@ -104,11 +97,13 @@ def create_dataset(input_set, num_of_series, num_of_steps, w):
     return x_set, y_set
 
 
-def execute(series_values, series_names, w):
+def execute(series_values, series_names, w, load_trained_model, series_to_use):
     """ function where main work gets done
         series_values : 2D array -> columns are different time series, rows are time series values across time
         series_names  : 1D array -> rows have the names of the time series
-        w : window of sampling """
+        w : window of sampling
+        load_trained_model : if True, a pre trained model will be loaded, otherwise a new model will be trained
+        series_to_use   : if not None, training/loading is done per given series, otherwise per entire set of series """
 
     # train test split 80-20 rule (the first 80% of time series values will be used for the training, rest 20% for testing)
     train_set_size = math.floor((series_values.shape[0])*0.8)
@@ -127,8 +122,16 @@ def execute(series_values, series_names, w):
     # get x_train, y_train
     x_train, y_train = create_dataset(scaled_train_set, num_of_series, train_set.shape[0] - w, w)
 
-    # configure RNN-LSTM model
-    model = config_model(x_train.shape[1])
+    if load_trained_model is False:
+        # configure new RNN-LSTM model
+        model = config_model(x_train.shape[1])
+    else:
+        if series_to_use is not None:
+            # load pre trained RNN-LSTM model for series
+            model = load_model('/models/forecast/model_' + str(series_to_use) + '.h5')
+        else:
+            # load pre trained RNN-LSTM model for entire set of series
+            model = load_model('/models/forecast/big_model.h5')
 
     # getting all the values of all selected time series starting from the last window before the test set
     inputs = series_values[series_values.shape[0] - test_set.shape[0] - w:]
@@ -138,10 +141,19 @@ def execute(series_values, series_names, w):
     # get x_test, y_test
     x_test, y_test = create_dataset(inputs, num_of_series, test_set.shape[0], w)
 
-    # train model by fitting it to the training set
-    history = model.fit(x_train, y_train, epochs = 80, batch_size = 64, validation_data=(x_test, y_test), verbose=0)
-    # plot the train loss vs test loss learning curve for given training history
-    plot_loss(history)
+    # if load_trained_model option was not given, train new model
+    if load_trained_model is False:
+        # train model by fitting it to the training set
+        history = model.fit(x_train, y_train, epochs = 60, batch_size = 256, validation_data=(x_test, y_test), verbose=1)
+        # plot the train loss vs test loss learning curve for given training history
+        plot_loss(history)
+
+        if series_to_use is not None:
+            # save trained RNN-LSTM model of series, for future use
+            model.save('/models/forecast/model_' + str(series_to_use) + '.h5')
+        else:
+            # save trained RNN-LSTM model of entire set of series, for future use
+            model.save('/models/forecast/big_model.h5')
 
     # time axis
     time_points = [index + 1 for index in range(train_set.shape[0], series_values.shape[0])]

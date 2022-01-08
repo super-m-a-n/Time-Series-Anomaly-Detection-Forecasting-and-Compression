@@ -19,6 +19,9 @@ from forecast_utils import execute
 parser = argparse.ArgumentParser()
 parser.add_argument('-d', help="Specify input dataset file path", type=str, required=True)
 parser.add_argument('-n', help="Specify index of time series to forecast", type=int, required=True)
+parser.add_argument('-load', help="Specify use of pre-trained models", dest='load', action='store_true', required=False)
+parser.add_argument('-train', help="Specify training of models", dest='load', action='store_false', required=False)
+parser.set_defaults(load=True)
 args = parser.parse_args()
 
 if args.n < 1:
@@ -27,6 +30,8 @@ if args.n < 1:
 # save arguments
 dataset_path = args.d
 num_of_series = args.n
+# load pre trained model or train new model
+load_trained_model = args.load
 
 # Load and peek the input dataset csv file
 dataset = pd.read_csv(dataset_path, sep='\t', lineterminator='\n', header=None)
@@ -54,7 +59,7 @@ for series_index in range(num_of_series):
     series_values = series_values.reshape(-1,1)
 
     # execute training, plots
-    execute(series_values, series_names[series_index:], w)
+    execute(series_values, series_names[series_index:], w, load_trained_model, series_index)
 
 
 # train one model over all series
@@ -66,4 +71,4 @@ series_values = dataset.iloc[:num_of_series, cols].values
 series_values = series_values.T
 
 # execute training, plots
-execute(series_values, series_names, w)
+execute(series_values, series_names, w, load_trained_model, None)
