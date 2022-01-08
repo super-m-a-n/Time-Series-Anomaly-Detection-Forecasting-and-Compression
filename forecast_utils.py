@@ -128,10 +128,10 @@ def execute(series_values, series_names, w, load_trained_model, series_to_use):
     else:
         if series_to_use is not None:
             # load pre trained RNN-LSTM model for series
-            model = load_model('/models/forecast/model_' + str(series_to_use) + '.h5')
+            model = load_model('/content/models/forecast/model_' + str(series_to_use) + '.h5')
         else:
             # load pre trained RNN-LSTM model for entire set of series
-            model = load_model('/models/forecast/big_model.h5')
+            model = load_model('/content/models/forecast/big_model.h5')
 
     # getting all the values of all selected time series starting from the last window before the test set
     inputs = series_values[series_values.shape[0] - test_set.shape[0] - w:]
@@ -150,10 +150,10 @@ def execute(series_values, series_names, w, load_trained_model, series_to_use):
 
         if series_to_use is not None:
             # save trained RNN-LSTM model of series, for future use
-            model.save('/models/forecast/model_' + str(series_to_use) + '.h5')
+            model.save('/content/models/forecast/model_' + str(series_to_use) + '.h5')
         else:
             # save trained RNN-LSTM model of entire set of series, for future use
-            model.save('/models/forecast/big_model.h5')
+            model.save('/content/models/forecast/big_model.h5')
 
     # time axis
     time_points = [index + 1 for index in range(train_set.shape[0], series_values.shape[0])]
