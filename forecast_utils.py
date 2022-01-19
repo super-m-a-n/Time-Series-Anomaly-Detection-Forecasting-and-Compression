@@ -32,11 +32,11 @@ def config_model(input_size):
     """ configure and return RNN-LSTM model to be trained """
     model = Sequential()
     # Adding the first input LSTM layer
-    model.add(LSTM(units = 64, return_sequences = True, input_shape = (input_size, 1)))
+    model.add(LSTM(units = 100, return_sequences = True, input_shape = (input_size, 1)))
     # Dropout layer to avoid overfitting
     model.add(Dropout(0.3))
     # Adding a second LSTM layer
-    model.add(LSTM(units = 64))
+    model.add(LSTM(units = 100))
     # Dropout layer to avoid overfitting
     model.add(Dropout(0.3))
     # Adding the output layer
