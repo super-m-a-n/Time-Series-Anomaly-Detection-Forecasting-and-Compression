@@ -97,11 +97,12 @@ def create_dataset(input_set, num_of_series, num_of_steps, w):
     return x_set, y_set
 
 
-def execute(series_values, series_names, w, load_trained_model, series_to_use):
+def execute(series_values, series_names, w, n, load_trained_model, series_to_use):
     """ function where main work gets done
         series_values : 2D array -> columns are different time series, rows are time series values across time
         series_names  : 1D array -> rows have the names of the time series
         w : window of sampling
+        n : number of series to make predictions for
         load_trained_model : if True, a pre trained model will be loaded, otherwise a new model will be trained
         series_to_use   : if not None, training/loading is done per given series, otherwise per entire set of series """
 
@@ -159,7 +160,7 @@ def execute(series_values, series_names, w, load_trained_model, series_to_use):
     time_points = [index + 1 for index in range(train_set.shape[0], series_values.shape[0])]
 
     # for each of the selected time series make the original vs predicted series plot
-    for series_index in range(num_of_series):
+    for series_index in range(n):
         # get name for current time series
         series_name = series_names[series_index, 0]
 
