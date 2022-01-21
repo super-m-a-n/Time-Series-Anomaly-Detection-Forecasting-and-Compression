@@ -47,7 +47,7 @@ args = parser.parse_args()
 # save arguments
 dataset_path = args.d
 query_path = args.q
-num_of_series = 40 #args.n
+num_of_series = 0 #args.n
 output_dataset_path = args.od
 output_query_path = args.oq
 window_length = 10 #args.w
