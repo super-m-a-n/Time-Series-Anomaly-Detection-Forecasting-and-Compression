@@ -261,10 +261,10 @@ def execute(series_values, series_names, query_series_values, query_series_names
     encoded_time_points = [((index*window_length)/latent_dimension)+1 for index in range(0,(query_series_values.shape[0]* latent_dimension) // window_length)]
 
     if series_to_use is None:
-        output_dataset_original = open(output_dataset_path + '_original', 'w', encoding='utf-8')
-        output_dataset_encoded = open(output_dataset_path + '_encoded', 'w', encoding='utf-8')
-        output_query_original = open(output_query_path + '_original', 'w', encoding='utf-8')
-        output_query_encoded = open(output_query_path + '_encoded', 'w', encoding='utf-8')
+        output_dataset_original = open(output_dataset_path + '_original.csv', 'w', encoding='utf-8')
+        output_dataset_encoded = open(output_dataset_path + '_encoded.csv', 'w', encoding='utf-8')
+        output_query_original = open(output_query_path + '_original.csv', 'w', encoding='utf-8')
+        output_query_encoded = open(output_query_path + '_encoded.csv', 'w', encoding='utf-8')
 
     # for each of the selected time series make the original vs predicted series plot
     for series_index in range(num_of_query_series):
